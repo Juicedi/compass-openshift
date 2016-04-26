@@ -101,10 +101,10 @@ var SampleApp = function() {
         };
         
         self.routes['/getFavourite'] = function(req, res) {
-            var favourite = {
+            var favourite = {[
                 lat: 12.1212,
                 lng: 23.2323
-            }
+            ]}
             res.send(favourite);
         };
 
