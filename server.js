@@ -99,6 +99,14 @@ var SampleApp = function() {
             var link = "http://i.imgur.com/kmbjB.png";
             res.send("<html><body><img src='" + link + "'></body></html>");
         };
+        
+        self.routes['/getFavourite'] = function(req, res) {
+            var favourite = {
+                lat: 12.1212,
+                lng: 23.2323
+            }
+            res.send("<html><body><p>favourite</p></body></html>");
+        };
 
         self.routes['/'] = function(req, res) {
             res.setHeader('Content-Type', 'text/html');
