@@ -105,7 +105,7 @@ var SampleApp = function() {
                 lat: 12.1212,
                 lng: 23.2323
             }
-            res.send("<html><body><p>" + favourite+ "</p></body></html>");
+            res.send(favourite);
         };
 
         self.routes['/'] = function(req, res) {
