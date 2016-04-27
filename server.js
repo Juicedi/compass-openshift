@@ -115,6 +115,13 @@ var SampleApp = function () {
         }
     });
 
+    // select your database
+    use nodejs;
+    // insert a book record into a collection of "books"
+    db.books.insert({
+        title: 'MongoDB in the Wild',
+        description: "Tales of NoSQL Adventures"
+    })
 
     /*  ================================================================  */
     /*  App server functions (main app logic here).                       */
