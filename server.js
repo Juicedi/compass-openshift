@@ -109,27 +109,9 @@ var SampleApp = function () {
     var mongojs = require('mongojs');
     var db = mongojs(connection_string, ['books']);
     var books = db.collection('books');
-    // similar syntax as the Mongo command-line interface
-    // log each of the first ten docs in the collection
-    /*
-    db.books.find({}).limit(10).forEach(function (err, doc) {
-        if (err) throw err;
-        if (doc) {
-            self.asd = doc;
-            console.dir(doc);
-        }
-    });
-    */
 
     // select your database
     //use 'nodejs';
-    // insert a book record into a collection of "books"
-    /*
-    db.books.insert({
-        title: 'MongoDB in the Wild',
-        description: "Tales of NoSQL Adventures"
-    });
-    */
 
     /*  ================================================================  */
     /*  App server functions (main app logic here).                       */
@@ -153,16 +135,16 @@ var SampleApp = function () {
             };
             res.send(favourite);
         };
-        
+
         self.routes['/getBocker'] = function (req, res) {
             var kakke = 'jou: ';
             db.books.find({}).limit(10).forEach(function (err, doc) {
                 if (err) throw err;
                 if (doc) {
                     kakke = kakke + doc;
+                    res.send(kakke);
                 }
             });
-            res.send(kakke);
         };
 
         self.routes['/'] = function (req, res) {
