@@ -152,6 +152,9 @@ var SampleApp = function () {
                 lng: 23.2323
             };
             res.send(favourite);
+        };
+        
+        self.routes['/getBocker'] = function (req, res) {
             db.books.find({}).limit(10).forEach(function (err, doc) {
                 if (err) throw err;
                 if (doc) {
