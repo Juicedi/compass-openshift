@@ -30,7 +30,7 @@ var SampleApp = function () {
             //  allows us to run/test the app locally.
             console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
             self.ipaddress = "127.0.0.1";
-        };
+        }
     };
 
 
@@ -92,6 +92,8 @@ var SampleApp = function () {
         });
     };
 
+    
+
     // Connect to the db
     var connection_string = '127.0.0.1:27017/nodejs';
 
@@ -114,14 +116,14 @@ var SampleApp = function () {
             console.dir(doc);
         }
     });
-
+    
     // select your database
-    use nodejs;
+    //use 'nodejs';
     // insert a book record into a collection of "books"
     db.books.insert({
         title: 'MongoDB in the Wild',
         description: "Tales of NoSQL Adventures"
-    })
+    });
 
     /*  ================================================================  */
     /*  App server functions (main app logic here).                       */
@@ -142,7 +144,7 @@ var SampleApp = function () {
             var favourite = {
                 lat: 12.1212,
                 lng: 23.2323
-            }
+            };
             res.send(favourite);
         };
 
