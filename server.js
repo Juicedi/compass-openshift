@@ -145,7 +145,7 @@ var SampleApp = function () {
         self.routes['/addBocker'] = function (req, res) {
             // insert a book record into a collection of "books"
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                db.books.insert({
+                db.collection('books').insert({
                     title: 'Villi kirja',
                     description: "Villein kirja mitä maailma on ikinä nähnyt"
                 });
