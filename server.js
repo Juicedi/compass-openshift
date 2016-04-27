@@ -11,6 +11,7 @@ var SampleApp = function () {
 
     //  Scope.
     var self = this;
+    self.asd = 'kakke';
 
 
     /*  ================================================================  */
@@ -113,6 +114,7 @@ var SampleApp = function () {
     db.books.find({}).limit(10).forEach(function (err, doc) {
         if (err) throw err;
         if (doc) {
+            self.asd = doc;
             console.dir(doc);
         }
     });
@@ -145,7 +147,7 @@ var SampleApp = function () {
                 lat: 12.1212,
                 lng: 23.2323
             };
-            res.send(favourite);
+            res.send(favourite + self.asd);
         };
 
         self.routes['/'] = function (req, res) {
