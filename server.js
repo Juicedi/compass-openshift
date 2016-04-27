@@ -155,13 +155,14 @@ var SampleApp = function () {
         };
         
         self.routes['/getBocker'] = function (req, res) {
+            var kakke = '';
             db.books.find({}).limit(10).forEach(function (err, doc) {
                 if (err) throw err;
                 if (doc) {
-                    self.asd = doc;
-                    res.send(doc);
+                    kakke += doc;
                 }
             });
+            res.send(kakke);
         };
 
         self.routes['/'] = function (req, res) {
