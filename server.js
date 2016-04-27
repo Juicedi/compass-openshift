@@ -143,7 +143,7 @@ var SampleApp = function () {
                 if (doc) {
                     kakke.push(doc);
                 }
-                if(kakke.length > 1){
+                if(kakke.length > db.books.find({}).length){
                     res.send(kakke);
                 }
             });
