@@ -2,6 +2,8 @@
  //  OpenShift sample Node application
 var express = require('express');
 var fs = require('fs');
+//load the Client interface
+var MongoClient = require('mongodb').MongoClient;
 
 
 /**
@@ -11,7 +13,6 @@ var SampleApp = function () {
 
     //  Scope.
     var self = this;
-    self.asd = 'kakke';
 
 
     /*  ================================================================  */
@@ -106,13 +107,6 @@ var SampleApp = function () {
             process.env.OPENSHIFT_APP_NAME;
     }
 
-    var mongojs = require('mongojs');
-    var db = mongojs(connection_string, ['books']);
-    var books = db.collection('books');
-
-    // select your database
-    //use 'nodejs';
-
     /*  ================================================================  */
     /*  App server functions (main app logic here).                       */
     /*  ================================================================  */
@@ -137,14 +131,15 @@ var SampleApp = function () {
         };
 
         self.routes['/getBocker'] = function (req, res) {
-            var kakke = [];
-            db.books.find().limit(10).forEach(function (err, doc) {
+            // the client db connection scope is wrapped in a callback:
+            MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
-                if (doc) {
-                    kakke.push(doc);
-                }
+                var collection = db.collection('books').find().limit(10).toArray(function (err, docs) {
+                    console.dir(docs);
+                    db.close();
+                });
+                res.send(collection);
             });
-            res.send(kakke);
         };
 
         self.routes['/'] = function (req, res) {
