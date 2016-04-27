@@ -147,7 +147,8 @@ var SampleApp = function () {
                 lat: 12.1212,
                 lng: 23.2323
             };
-            res.send(favourite + self.asd);
+            res.send(favourite);
+            res.send(self.asd);
         };
 
         self.routes['/'] = function (req, res) {
