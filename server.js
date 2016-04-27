@@ -159,7 +159,7 @@ var SampleApp = function () {
             db.books.find({}).limit(10).forEach(function (err, doc) {
                 if (err) throw err;
                 if (doc) {
-                    kakke += doc;
+                    kakke = kakke + doc;
                 }
             });
             res.send(kakke);
