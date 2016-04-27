@@ -155,7 +155,7 @@ var SampleApp = function () {
         };
         
         self.routes['/getBocker'] = function (req, res) {
-            var kakke = '';
+            var kakke = 'jou: ';
             db.books.find({}).limit(10).forEach(function (err, doc) {
                 if (err) throw err;
                 if (doc) {
