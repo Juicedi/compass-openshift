@@ -136,9 +136,9 @@ var SampleApp = function () {
                 if (err) throw err;
                 var collection = db.collection('books').find().limit(10).toArray(function (err, docs) {
                     console.dir(docs);
+                    res.send(docs);
                     db.close();
                 });
-                res.send(collection);
             });
         };
 
