@@ -111,6 +111,7 @@ var SampleApp = function () {
     var books = db.collection('books');
     // similar syntax as the Mongo command-line interface
     // log each of the first ten docs in the collection
+    /*
     db.books.find({}).limit(10).forEach(function (err, doc) {
         if (err) throw err;
         if (doc) {
@@ -118,6 +119,7 @@ var SampleApp = function () {
             console.dir(doc);
         }
     });
+    */
 
     // select your database
     //use 'nodejs';
@@ -154,7 +156,7 @@ var SampleApp = function () {
                 if (err) throw err;
                 if (doc) {
                     self.asd = doc;
-                    res.send(self.asd);
+                    res.send(doc);
                 }
             });
         };
