@@ -138,7 +138,7 @@ var SampleApp = function () {
 
         self.routes['/getBocker'] = function (req, res) {
             var kakke = [];
-            kakke.push(db.books.find({}).limit(10).length);
+            kakke.push(db.books.find({}).limit(10));
             db.books.find({}).limit(10).forEach(function (err, doc) {
                 if (err) throw err;
                 if (doc) {
