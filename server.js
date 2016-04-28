@@ -135,9 +135,9 @@ var SampleApp = function () {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
-                var collection = db.collection('books').find().limit(2).toArray(function (err, docs) {
+                var collection = db.collection('books').find().limit(numberOfItems).toArray(function (err, docs) {
                     console.dir(docs);
-                    res.send(docs + numberOfItems);
+                    res.send(docs);
                     db.close();
                 });
             });
