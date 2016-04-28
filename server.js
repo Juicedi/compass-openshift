@@ -130,11 +130,11 @@ var SampleApp = function () {
             res.send(favourite);
         };
 
-        self.routes['/getBocker'] = function (req, res) {
+        self.routes['/getLocations'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db, numberOfItems) {
                 if (err) throw err;
-                var collection = db.collection('books').find().limit(10).toArray(function (err, docs) {
+                var collection = db.collection('locations').find().limit(10).toArray(function (err, docs) {
                     console.dir(docs);
                     res.send(docs);
                     db.close();
@@ -155,7 +155,7 @@ var SampleApp = function () {
                     upsert: true
                 });
             });
-            res.send('kirja lisättyd');
+            res.send('User\'s ' + req.query.name + ' information has been changed');
         };
 
         self.routes['/'] = function (req, res) {
