@@ -148,6 +148,7 @@ var SampleApp = function () {
                 db.collection('locations').update({
                     user: req.query.name
                 }, {
+                    user: req.query.name,
                     lat: req.query.lat,
                     lng: req.query.lng
                 }, {
