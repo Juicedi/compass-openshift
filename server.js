@@ -156,9 +156,8 @@ var SampleApp = function () {
             // insert a book record into a collection of "books"
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 db.collection('locations').update({
-                    user: 'kayttaja'
+                    user: req.query.name
                 }, {
-                    user: req.query.name,
                     lat: req.query.lat,
                     lng: req.query.lng
                 }, {
