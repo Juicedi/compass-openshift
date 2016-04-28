@@ -131,12 +131,13 @@ var SampleApp = function () {
         };
 
         self.routes['/getBocker'] = function (req, res) {
+            var numberOfItems = req.query.number
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
                 var collection = db.collection('books').find().limit(2).toArray(function (err, docs) {
                     console.dir(docs);
-                    res.send(docs);
+                    res.send(docs + numberOfItems);
                     db.close();
                 });
             });
