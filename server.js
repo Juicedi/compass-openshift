@@ -142,13 +142,27 @@ var SampleApp = function () {
             });
         };
 
+        db.people.update({
+            name: "Andy"
+        }, {
+            name: "Andy",
+            rating: 1,
+            score: 1
+        }, {
+            upsert: true
+        })
+
         self.routes['/updateLocation'] = function (req, res) {
             // insert a book record into a collection of "books"
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                db.collection('locations').insert({
+                db.collection('locations').update({
+                    user: 'kayttaja'
+                }, {
                     user: req.query.name,
                     lat: req.query.lat,
                     lng: req.query.lng
+                }, {
+                    upsert: true
                 });
             });
             res.send('kirja lisättyd');
