@@ -142,12 +142,13 @@ var SampleApp = function () {
             });
         };
 
-        self.routes['/addBocker'] = function (req, res) {
+        self.routes['/updateLocation'] = function (req, res) {
             // insert a book record into a collection of "books"
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                db.collection('books').insert({
-                    title: req.query.name,
-                    description: "Villein kirja mitä maailma on ikinä nähnyt"
+                db.collection('locations').insert({
+                    user: req.query.name,
+                    lat: req.query.lat,
+                    lng: req.query.lng
                 });
             });
             res.send('kirja lisättyd');
