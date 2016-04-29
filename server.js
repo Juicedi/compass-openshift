@@ -136,10 +136,8 @@ var SampleApp = function () {
                 if (err) throw err;
                 var collection = db.collection('locations').find().limit(100).toArray(function (err, docs) {
                     console.dir(docs);
-
-                    res.header('Access-Control-Allow-Origin: *');
-                    res.header('Access-Control-Allow-Methods: OPTION, GET, POST, PUT, DELETE, FILE');
-                    res.header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accespt, Key');
+                    res.header("Access-Control-Allow-Origin", "*");
+                    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                     res.send(docs);
                     db.close();
                 });
