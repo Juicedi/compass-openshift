@@ -4,6 +4,7 @@ var express = require('express');
 var fs = require('fs');
 //load the Client interface
 var MongoClient = require('mongodb').MongoClient;
+var cors = require('cors');
 
 
 /**
