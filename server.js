@@ -142,7 +142,7 @@ var SampleApp = function () {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
                     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-                    res.send(docs);
+                    res.send(connection_string);
                     db.close();
                 });
             });
