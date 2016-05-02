@@ -17,7 +17,7 @@
         // when the request is loaded
         httpRequest.onload = function () {
             // we're calling our method
-            var response = JSON.parse(httpRequest.response);
+            var response = httpRequest.response;
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
