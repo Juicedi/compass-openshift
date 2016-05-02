@@ -4,28 +4,26 @@
 (function () {
     'use strict';
 
-    var database = {
+    var username = 'kayttaja';
+
+    var startAndEndPoint = {
         start: {},
         end: {}
     };
 
     function updateStartLocation(position) {
         console.log(position.coords);
-
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=101';
         var httpRequest = new XMLHttpRequest();
         // when the request is loaded
-        httpRequest.onload = function () {
-            // we're calling our method
-            var response = httpRequest.response;
-        };
+        httpRequest.onload = function () {};
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
     }
 
     // gets starting location coordinates
     function getStartLocation() {
-        var x = document.getElementById("demo");
+        var x = document.getElementById("body");
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(updateStartLocation);
         } else {
@@ -37,14 +35,13 @@
 
     // gets location coordinates by httpRequest from google geoCode API
     function getEndLocation(callback) {
-        
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getLocations';
+        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=sello';
         var httpRequest = new XMLHttpRequest();
         // when the request is loaded
         httpRequest.onload = function () {
             // we're calling our method
             var response = JSON.parse(httpRequest.response);
-            database.end = response;
+            startAndEndPoint.end = response;
             callback();
         };
         httpRequest.open('GET', apiRequest);
@@ -56,8 +53,8 @@
      * this will handle the data and show in what direction is the end point
      */
     function getDirection() {
-        var endCoordinates = database.end;
-        var startCoordinates = database.start;
+        var endCoordinates = startAndEndPoint.end;
+        var startCoordinates = startAndEndPoint.start;
 
         var latDifference = endCoordinates.lat - startCoordinates.lat;
         var lngDifference = endCoordinates.lng - startCoordinates.lng;
@@ -85,12 +82,9 @@
     function initButtons() {
         $('.hidden').removeClass('hidden');
         $('#sello').on('click', function () {
-            console.log(database.end);
-            getStartLocation();
             getDirection();
         });
         $('#shanghai').on('click', function () {
-            getStartLocation();
             getDirection();
         });
     }
@@ -125,7 +119,7 @@
 
         console.log(d + 'm');
     }
-    calculateDistance();
-
+    // calculateDistance();
+    getStartLocation();
     getEndLocation(initButtons);
 })();

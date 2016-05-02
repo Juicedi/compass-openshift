@@ -144,6 +144,20 @@ var SampleApp = function () {
                 });
             });
         };
+        
+        self.routes['/getUserLocation'] = function (req, res) {
+            // the client db connection scope is wrapped in a callback:
+            MongoClient.connect('mongodb://' + connection_string, function (err, db) {
+                if (err) throw err;
+                var collection = db.collection('locations').find({user: 'kayttaja'}).limit(10).toArray(function (err, docs) {
+                    console.dir(docs);
+                    res.header("Access-Control-Allow-Origin", "*");
+                    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+                    res.send(docs);
+                    db.close();
+                });
+            });
+        };
 
         self.routes['/updateLocation'] = function (req, res) {
             // insert a book record into a collection of "books"
