@@ -158,6 +158,23 @@ var SampleApp = function () {
                 });
             });
         };
+        
+        self.routes['/setEndLocation'] = function (req, res) {
+            // insert a book record into a collection of "books"
+            MongoClient.connect('mongodb://' + connection_string, function (err, db) {
+                db.collection('locations').update({
+                    user: 'end'
+                }, {
+                    user: 'end',
+                    lat: req.query.lat,
+                    lng: req.query.lng
+                }, {
+                    upsert: true
+                });
+            });
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        };
 
         self.routes['/updateLocation'] = function (req, res) {
             // insert a book record into a collection of "books"

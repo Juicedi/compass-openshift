@@ -6,14 +6,9 @@
 
     var username = 'kayttaja';
 
-    var startAndEndPoint = {
-        start: {},
-        end: {}
-    };
-
     function updateStartLocation(position) {
         console.log(position.coords);
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=101';
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
         var httpRequest = new XMLHttpRequest();
         // when the request is loaded
         httpRequest.onload = function () {};
@@ -41,23 +36,51 @@
         httpRequest.onload = function () {
             // we're calling our method
             var response = JSON.parse(httpRequest.response);
-            startAndEndPoint.end = response;
+            var apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.results[4].address_components.geometry.lat + '&lng=' + response.results[4].address_components.geometry.lng;
+            var httpRequest = new XMLHttpRequest();
+            // when the request is loaded
+            httpRequest.onload = function () {
+                startingCoordinates = httpRequest.response;
+            };
+            httpRequest.open('GET', apiRequest);
+            httpRequest.send();
             callback();
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
     }
 
+    function getCoordinates() {
+        var startingCoordinates = {};
+        var endingCoordinates = {};
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUsersLocation;
+        var httpRequest = new XMLHttpRequest();
+        // when the request is loaded
+        httpRequest.onload = function () {
+            startingCoordinates = httpRequest.response;
+            var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getEndLocation;
+            var httpRequest = new XMLHttpRequest();
+            // when the request is loaded
+            httpRequest.onload = function () {
+                endingCoordinates = httpRequest.response;
+                getDirection(startingCoordinates, endingCoordinates);
+            };
+            httpRequest.open('GET', apiRequest);
+            httpRequest.send();
+        };
+        httpRequest.open('GET', apiRequest);
+        httpRequest.send();
+
+
+    }
+
     /**
      * When the request is ready,
      * this will handle the data and show in what direction is the end point
      */
-    function getDirection() {
-        var endCoordinates = startAndEndPoint.end;
-        var startCoordinates = startAndEndPoint.start;
-
-        var latDifference = endCoordinates.lat - startCoordinates.lat;
-        var lngDifference = endCoordinates.lng - startCoordinates.lng;
+    function getDirection(start, end) {
+        var latDifference = end.lat - start.lat;
+        var lngDifference = end.lng - start.lng;
 
         var division = latDifference / lngDifference;
         var rad2deg = 180 / Math.PI;
