@@ -107,8 +107,6 @@ var SampleApp = function () {
             process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
             process.env.OPENSHIFT_APP_NAME;
     }
-    
-    console.log(connection_string);
 
     /*  ================================================================  */
     /*  App server functions (main app logic here).                       */
@@ -134,7 +132,6 @@ var SampleApp = function () {
         };
 
         self.routes['/getLocations'] = function (req, res) {
-            console.log(connection_string);
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
@@ -142,7 +139,7 @@ var SampleApp = function () {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
                     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-                    res.send(connection_string);
+                    res.send(docs);
                     db.close();
                 });
             });
