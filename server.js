@@ -107,6 +107,8 @@ var SampleApp = function () {
             process.env.OPENSHIFT_MONGODB_DB_PORT + '/' +
             process.env.OPENSHIFT_APP_NAME;
     }
+    
+    console.log(connection_string);
 
     /*  ================================================================  */
     /*  App server functions (main app logic here).                       */
@@ -132,6 +134,7 @@ var SampleApp = function () {
         };
 
         self.routes['/getLocations'] = function (req, res) {
+            console.log(connection_string);
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
