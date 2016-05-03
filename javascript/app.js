@@ -1,17 +1,26 @@
 /** reittiä varten
  * https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&origin=60.2182261,24.81152&destination=60.1711124,24.9417507&mode=walking
+ * http: //nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 
+ * https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=helsinki
  */
 (function () {
     'use strict';
 
     var username = 'kayttaja';
+    var geolocation = '';
 
-    setInterval(function () {
-        console.log("Hello");
-    }, 10000);
+    setInterval(function () {}, 1000);
+
+    //========================================================================================
+    // Models
+    //========================================================================================
 
     // Updates database starting point coordinates
     function updateStartLocation(position) {
+        console.log(position.coords.heading);
+        if (position.coords.heading !== null) {
+            $('#compass').rotate(position.coords.heading);
+        }
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {};
@@ -27,28 +36,29 @@
         } else {
             x.innerHTML = "Geolocation is not supported by this browser.";
         }
-        // http: //nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=helsinki
     }
-
 
     // Sets end location to database in separate request, because otherwise it response would be null
     function setEndLocationToDb(response) {
+        var locationName = response.address_components[0].long_name;
+        response = response.geometry.location;
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.lat + '&lng=' + response.lng;
         var httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {};
+        httpRequest.onload = function () {
+            $('#message').html('Your destination is ' + locationName);
+            getCoordinates();
+        };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
     }
 
     // Gets location coordinates by httpRequest from google geoCode API
-    function getEndLocation(callback) {
-        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=gransinmäki&region=fi';
+    function getEndLocation() {
+        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=' + geolocation;
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
             var response = JSON.parse(httpRequest.response);
-            console.log(response);
-            setEndLocationToDb(response.results[0].geometry.location);
-            callback();
+            setEndLocationToDb(response.results[0]);
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
@@ -79,15 +89,15 @@
         httpRequest.send();
     }
 
-    /**
-     * When the request is ready,
-     * this will handle the data and show in what direction is the end point
-     */
+    //========================================================================================
+    // Controllers
+    //========================================================================================
+
+    //When the request is ready,
+    //this will handle the data and show in what direction is the end point
     function calculateDirection(start, end) {
         start = JSON.parse(start)[0];
         end = JSON.parse(end)[0];
-        console.log(start);
-        console.log(end);
         var latDifference = end.lat - start.lat;
         var lngDifference = end.lng - start.lng;
         var division = latDifference / lngDifference;
@@ -101,30 +111,6 @@
         degrees = degrees - (degrees * 2);
         calculateDistance(start, end);
         showCompass(degrees);
-    }
-
-    // Shows results in html
-    function showCompass(degrees) {
-        $('#arrow').rotate(degrees);
-    }
-
-    function showDistance(distance) {
-        if (distance < 1) {
-            distance = distance * 1000;
-            $('#distance').html((Math.round(distance * 100) / 100) + 'm');
-        } else {
-            $('#distance').html((Math.round(distance * 100) / 100) + 'km');
-        }
-    }
-
-    function initButtons() {
-        $('.hidden').removeClass('hidden');
-        $('#sello').on('click', function () {
-            getCoordinates();
-        });
-        $('#shanghai').on('click', function () {
-            getCoordinates();
-        });
     }
 
     function calculateDistance(start, end) {
@@ -142,7 +128,6 @@
 
         // The haversine formula calculates the distance between two coordinates 
         var R = 6371; // km 
-        // has a problem with the .toRad() method below.
         var x1 = lat2 - lat1;
         var dLat = x1.toRad();
         var x2 = lon2 - lon1;
@@ -154,7 +139,81 @@
         var d = R * c;
         showDistance(d);
     }
+    
+    function init() {
+        var compass = document.getElementById('compass');
+        if (window.DeviceOrientationEvent) {
 
+            window.addEventListener('deviceorientation', function (event) {
+                var alpha;
+                //Check for iOS property
+                if (event.webkitCompassHeading) {
+                    alpha = event.webkitCompassHeading;
+                    //Rotation is reversed for iOS
+                    $('#compass').rotate(alpha);
+                }
+                //non iOS
+                else {
+                    alpha = event.alpha;
+                    var webkitAlpha = alpha;
+                    if (!window.chrome) {
+                        //Assume Android stock (this is crude, but good enough for our example) and apply offset
+                        webkitAlpha = alpha - 270;
+                    }
+                }
+
+                compass.style.Transform = 'rotate(' + alpha + 'deg)';
+                compass.style.WebkitTransform = 'rotate(' + webkitAlpha + 'deg)';
+                //Rotation is reversed for FF
+                compass.style.MozTransform = 'rotate(-' + alpha + 'deg)';
+            }, false);
+        }
+    }
+    init();
+    /*if (window.DeviceOrientationEvent) {
+        document.getElementById("doEvent").innerHTML = "DeviceOrientation";
+        // Listen for the deviceorientation event and handle the raw data
+        window.addEventListener('deviceorientation', function (eventData) {
+            // alpha is the compass direction the device is facing in degrees
+            //var dir = eventData.alpha
+
+            // call our orientation event handler
+            $('#compass').rotate(dir);
+        }, false);
+    } else {
+        document.getElementById("doEvent").innerHTML = "Not supported."
+    }*/
+
+    //========================================================================================
+    // Views
+    //========================================================================================
+
+    function showCompass(degrees) {
+        $('#arrow').rotate(degrees);
+    }
+
+    function showDistance(distance) {
+        if (distance < 1) {
+            distance = distance * 1000;
+            $('#distance').html((Math.round(distance * 100) / 100) + 'm');
+        } else {
+            $('#distance').html((Math.round(distance * 100) / 100) + 'km');
+        }
+    }
+    var rota = 0;
+
+    function initButtons() {
+        $('#search').on('click', function () {
+            $('.hidden').removeClass('hidden');
+            geolocation = $('#destination').val();
+            getEndLocation();
+        });
+        $('#rotate').on('click', function () {
+            rota += 5;
+            $('#compass').rotate(rota);
+        });
+    }
+
+    initButtons();
     setStartLocation();
-    getEndLocation(initButtons);
 })();

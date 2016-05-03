@@ -8,24 +8,27 @@
 </head>
 
 <body>
-    <h2>your location -> Sello</h2>
-    
-    <div class="hidden">
-        <button id="sello">Sello</button>
-        <button id="shanghai">Shanghai</button>
-    </div>
-    
-    <h1>------N------</h1>
-    <br>
-    <br>
-    <img id="arrow" src="img/arrow.png" alt="arrow image" />
-    <br>
-    <br>
-    <h1>------S------</h1>
-    <br>
-    <h1 id="distance"></h1>
-</body>
 
+    <form onkeypress="return event.keyCode != 13;">
+        <label>Choose your destination.</label>
+        <input id="destination" type="text" placeholder="Location">
+        <button id="search" type="button">Search</button>
+        <p id="message"></p>
+    </form>
+    <br>
+    <br>
+    <div id="compass">
+        <img id="arrow" src="img/arrow.png" alt="arrow image" />
+    </div>
+    <br>
+    <br>
+    <h1 id="doEvent"></h1>
+    <h1 id="distance"></h1>
+
+    <button id="rotate" type="button">Rotate</button>
+
+</body>
+    
 <script src="bower_components/jquery/dist/jquery.js"></script>
 <script src="javascript/jqueryRotate.js"></script>
 <script src="javascript/app.js"></script>
