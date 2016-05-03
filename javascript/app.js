@@ -5,10 +5,12 @@
     'use strict';
 
     var username = 'kayttaja';
-    
-    setInterval(function(){ console.log("Hello"); }, 10000);
 
-    // updates database starting point coordinates
+    setInterval(function () {
+        console.log("Hello");
+    }, 10000);
+
+    // Updates database starting point coordinates
     function updateStartLocation(position) {
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
         var httpRequest = new XMLHttpRequest();
@@ -17,7 +19,7 @@
         httpRequest.send();
     }
 
-    // gets starting location coordinates
+    // Gets starting location coordinates
     function setStartLocation() {
         var x = document.getElementById("body");
         if (navigator.geolocation) {
@@ -29,7 +31,7 @@
     }
 
 
-    // sets end location to database in separate request, because otherwise it response would be null
+    // Sets end location to database in separate request, because otherwise it response would be null
     function setEndLocationToDb(response) {
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.lat + '&lng=' + response.lng;
         var httpRequest = new XMLHttpRequest();
@@ -38,9 +40,9 @@
         httpRequest.send();
     }
 
-    // gets location coordinates by httpRequest from google geoCode API
+    // Gets location coordinates by httpRequest from google geoCode API
     function getEndLocation(callback) {
-        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=sanghai';
+        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=vihti&region=fi';
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
             var response = JSON.parse(httpRequest.response);
@@ -52,7 +54,7 @@
         httpRequest.send();
     }
 
-    // requests ending point from database and tries to get direction from starting point to ending point
+    // Requests ending point from database and tries to get direction from starting point to ending point
     function getDbEndPoint(startPoint) {
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getEndLocation';
         var httpRequest = new XMLHttpRequest();
@@ -64,7 +66,7 @@
         httpRequest.send();
     }
 
-    // requests starting point from database
+    // Requests starting point from database
     function getCoordinates() {
         var startingCoordinates = {};
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation';
@@ -84,38 +86,49 @@
     function calculateDirection(start, end) {
         start = JSON.parse(start)[0];
         end = JSON.parse(end)[0];
+        console.log(start);
+        console.log(end);
         var latDifference = end.lat - start.lat;
         var lngDifference = end.lng - start.lng;
         var division = latDifference / lngDifference;
         var rad2deg = 180 / Math.PI;
         var degrees = Math.atan(division) * rad2deg;
-        if (end.lng < start.lng) {
+        var asdpasd = end.lng - start.lng;
+        if (parseFloat(end.lng) < parseFloat(start.lng)) {
             degrees = degrees + 180;
         }
-        console.log(degrees);
         // invert the degrees, so positive degrees grow counter clockwise
-        degrees = degrees - degrees * 2;
+        degrees = degrees - (degrees * 2);
+        calculateDistance(start, end);
         showCompass(degrees);
     }
 
-    // shows results in html
+    // Shows results in html
     function showCompass(degrees) {
-        // console.log(degrees);
         $('#arrow').rotate(degrees);
+    }
+    
+    // Shows results in html
+    function showDistance(distance) {
+        $('#distance').html(distance+'km');
     }
 
     function initButtons() {
         $('.hidden').removeClass('hidden');
         $('#sello').on('click', function () {
             getCoordinates();
-        });
+        }); 
         $('#shanghai').on('click', function () {
-            
             getCoordinates();
         });
     }
 
-    function calculateDistance() {
+    function calculateDistance(start, end) {
+
+        var lat1 = parseFloat(start.lat);
+        var lon1 = parseFloat(start.lng);
+        var lat2 = parseFloat(end.lat);
+        var lon2 = parseFloat(end.lng);
 
         // Converts numeric degrees to radians
         if (typeof (Number.prototype.toRad) === "undefined") {
@@ -124,13 +137,8 @@
             };
         }
 
-        var lat1 = 60.2182348;
-        var lon1 = 24.8107336;
-        var lat2 = 60.2176518;
-        var lon2 = 24.8106959;
-
         // The haversine formula calculates the distance between two coordinates 
-        var R = 6371000; // km 
+        var R = 6371; // km 
         // has a problem with the .toRad() method below.
         var x1 = lat2 - lat1;
         var dLat = x1.toRad();
@@ -141,10 +149,10 @@
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         var d = R * c;
+        showDistance(d);
 
-        console.log(d + 'm');
+        console.log(d + 'km');
     }
-    // calculateDistance();
     setStartLocation();
     getEndLocation(initButtons);
 })();
