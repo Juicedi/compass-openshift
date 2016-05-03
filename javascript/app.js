@@ -42,7 +42,7 @@
 
     // Gets location coordinates by httpRequest from google geoCode API
     function getEndLocation(callback) {
-        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=vihti&region=fi';
+        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=gransinmäki&region=fi';
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
             var response = JSON.parse(httpRequest.response);
@@ -107,24 +107,27 @@
     function showCompass(degrees) {
         $('#arrow').rotate(degrees);
     }
-    
-    // Shows results in html
+
     function showDistance(distance) {
-        $('#distance').html(distance+'km');
+        if (distance < 1) {
+            distance = distance * 1000;
+            $('#distance').html((Math.round(distance * 100) / 100) + 'm');
+        } else {
+            $('#distance').html((Math.round(distance * 100) / 100) + 'km');
+        }
     }
 
     function initButtons() {
         $('.hidden').removeClass('hidden');
         $('#sello').on('click', function () {
             getCoordinates();
-        }); 
+        });
         $('#shanghai').on('click', function () {
             getCoordinates();
         });
     }
 
     function calculateDistance(start, end) {
-
         var lat1 = parseFloat(start.lat);
         var lon1 = parseFloat(start.lng);
         var lat2 = parseFloat(end.lat);
@@ -150,9 +153,8 @@
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         var d = R * c;
         showDistance(d);
-
-        console.log(d + 'km');
     }
+
     setStartLocation();
     getEndLocation(initButtons);
 })();
