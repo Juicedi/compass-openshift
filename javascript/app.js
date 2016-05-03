@@ -5,9 +5,11 @@
     'use strict';
 
     var username = 'kayttaja';
+    
+    setInterval(function(){ console.log("Hello"); }, 10000);
 
+    // updates database starting point coordinates
     function updateStartLocation(position) {
-        console.log(position.coords);
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {};
@@ -16,20 +18,20 @@
     }
 
     // gets starting location coordinates
-    function getStartLocation() {
+    function setStartLocation() {
         var x = document.getElementById("body");
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(updateStartLocation);
         } else {
             x.innerHTML = "Geolocation is not supported by this browser.";
         }
-        //http: //nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=helsinki
-
+        // http: //nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=helsinki
     }
 
-    
+
+    // sets end location to database in separate request, because otherwise it response would be null
     function setEndLocationToDb(response) {
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.results[3].geometry.location.lat + '&lng=' + response.results[3].geometry.location.lng;
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.lat + '&lng=' + response.lng;
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {};
         httpRequest.open('GET', apiRequest);
@@ -38,28 +40,31 @@
 
     // gets location coordinates by httpRequest from google geoCode API
     function getEndLocation(callback) {
-        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=sello';
+        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=sanghai';
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
             var response = JSON.parse(httpRequest.response);
-            setEndLocationToDb(response);
+            console.log(response);
+            setEndLocationToDb(response.results[0].geometry.location);
             callback();
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
     }
 
+    // requests ending point from database and tries to get direction from starting point to ending point
     function getDbEndPoint(startPoint) {
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getEndLocation';
-            var httpRequest = new XMLHttpRequest();
-            httpRequest.onload = function () {
-                var endPoint = httpRequest.response;
-                getDirection(startPoint, endPoint);
-            };
-            httpRequest.open('GET', apiRequest);
-            httpRequest.send();
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onload = function () {
+            var endPoint = httpRequest.response;
+            calculateDirection(startPoint, endPoint);
+        };
+        httpRequest.open('GET', apiRequest);
+        httpRequest.send();
     }
-    
+
+    // requests starting point from database
     function getCoordinates() {
         var startingCoordinates = {};
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation';
@@ -70,28 +75,26 @@
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
-
-
     }
 
     /**
      * When the request is ready,
      * this will handle the data and show in what direction is the end point
      */
-    function getDirection(start, end) {
+    function calculateDirection(start, end) {
+        start = JSON.parse(start)[0];
+        end = JSON.parse(end)[0];
         var latDifference = end.lat - start.lat;
         var lngDifference = end.lng - start.lng;
         var division = latDifference / lngDifference;
         var rad2deg = 180 / Math.PI;
         var degrees = Math.atan(division) * rad2deg;
-
-        if (endCoordinates.lng < startCoordinates.lng) {
+        if (end.lng < start.lng) {
             degrees = degrees + 180;
         }
-
+        console.log(degrees);
         // invert the degrees, so positive degrees grow counter clockwise
         degrees = degrees - degrees * 2;
-
         showCompass(degrees);
     }
 
@@ -107,6 +110,7 @@
             getCoordinates();
         });
         $('#shanghai').on('click', function () {
+            
             getCoordinates();
         });
     }
@@ -119,7 +123,7 @@
                 return this * Math.PI / 180;
             };
         }
-        
+
         var lat1 = 60.2182348;
         var lon1 = 24.8107336;
         var lat2 = 60.2176518;
@@ -141,6 +145,6 @@
         console.log(d + 'm');
     }
     // calculateDistance();
-    getStartLocation();
+    setStartLocation();
     getEndLocation(initButtons);
 })();
