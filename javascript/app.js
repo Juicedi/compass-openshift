@@ -9,7 +9,17 @@
     var username = 'kayttaja';
     var geolocation = '';
 
-    setInterval(function () {}, 1000);
+    /*setInterval(function () {
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/calibrateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onload = function () {
+        var firstPoint = getStartingCoordinates();
+        var secondPoint = httpRequest.response;
+        };
+        httpRequest.open('GET', apiRequest);
+        httpRequest.send();
+    }, 1000);
+    */
 
     //========================================================================================
     // Models
@@ -17,7 +27,6 @@
 
     // Updates database starting point coordinates
     function updateStartLocation(position) {
-        console.log(position.coords.heading);
         if (position.coords.heading !== null) {
             $('#compass').rotate(position.coords.heading);
         }
@@ -32,14 +41,7 @@
     function setStartLocation() {
         var x = document.getElementById("body");
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(processGeolocation,
-                // Optional settings below
-                geolocationError, {
-                    timeout: 0,
-                    enableHighAccuracy: true,
-                    maximumAge: Infinity
-                },
-                updateStartLocation);
+            navigator.geolocation.getCurrentPosition(updateStartLocation);
         } else {
             x.innerHTML = "Geolocation is not supported by this browser.";
         }
@@ -91,6 +93,18 @@
         httpRequest.onload = function () {
             startingCoordinates = httpRequest.response;
             getDbEndPoint(startingCoordinates);
+        };
+        httpRequest.open('GET', apiRequest);
+        httpRequest.send();
+    }
+    
+    function getStartingCoordinates() {
+        var startingCoordinates = {};
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation';
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onload = function () {
+            startingCoordinates = httpRequest.response;
+            return startingCoordinates;
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
