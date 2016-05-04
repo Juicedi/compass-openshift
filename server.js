@@ -210,6 +210,25 @@ var SampleApp = function () {
             res.send();
             db.close();
         };
+        
+        self.routes['/calibrateLocation'] = function (req, res) {
+            // insert a book record into a collection of "books"
+            MongoClient.connect('mongodb://' + connection_string, function (err, db) {
+                db.collection('locations').update({
+                    user: req.query.name+1
+                }, {
+                    user: req.query.name+1,
+                    lat: req.query.lat,
+                    lng: req.query.lng
+                }, {
+                    upsert: true
+                });
+            });
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+            res.send();
+            db.close();
+        };
 
         self.routes['/'] = function (req, res) {
             res.setHeader('Content-Type', 'text/html');

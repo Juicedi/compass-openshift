@@ -32,7 +32,14 @@
     function setStartLocation() {
         var x = document.getElementById("body");
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(updateStartLocation);
+            navigator.geolocation.getCurrentPosition(processGeolocation,
+                // Optional settings below
+                geolocationError, {
+                    timeout: 0,
+                    enableHighAccuracy: true,
+                    maximumAge: Infinity
+                },
+                updateStartLocation);
         } else {
             x.innerHTML = "Geolocation is not supported by this browser.";
         }
@@ -139,7 +146,9 @@
         var d = R * c;
         showDistance(d);
     }
-    
+
+    // orientate compass depending on the users movements
+    /*
     function init() {
         var compass = document.getElementById('compass');
         if (window.DeviceOrientationEvent) {
@@ -170,19 +179,7 @@
         }
     }
     init();
-    /*if (window.DeviceOrientationEvent) {
-        document.getElementById("doEvent").innerHTML = "DeviceOrientation";
-        // Listen for the deviceorientation event and handle the raw data
-        window.addEventListener('deviceorientation', function (eventData) {
-            // alpha is the compass direction the device is facing in degrees
-            //var dir = eventData.alpha
-
-            // call our orientation event handler
-            $('#compass').rotate(dir);
-        }, false);
-    } else {
-        document.getElementById("doEvent").innerHTML = "Not supported."
-    }*/
+    */
 
     //========================================================================================
     // Views

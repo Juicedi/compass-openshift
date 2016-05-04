@@ -42,7 +42,4 @@ h4{
     /* Chrome10-25,Safari5.1-6 */
     background: linear-gradient(to bottom, #ff0000 0%, #0000ff 100%);
     /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    -webkit-transition: 0.1s;
-    /* Safari */
-    transition: 0.1s;
 }

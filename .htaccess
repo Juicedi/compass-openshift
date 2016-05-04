@@ -1,3 +1,3 @@
 RewriteEngine On
 RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://users.metropolia.fi/~jussilat/Web/compassProj//$1 [R=301,L]
+RewriteRule ^(.*)$ https://users.metropolia.fi/~jussilat/Web/nodejs/$1 [R=301,L]
