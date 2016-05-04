@@ -1,6 +1,6 @@
 /* reittiä varten
  * https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&origin=60.2182261,24.81152&destination=60.1711124,24.9417507&mode=walking
- * http: //nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 
+ * http://nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 
  * https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=helsinki
  */
 (function () {
@@ -9,21 +9,34 @@
     var username = 'kayttaja';
     var geolocation = '';
 
-    /*setInterval(function () {
+    setInterval(function () {
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/calibrateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
         var firstPoint = getStartingCoordinates();
         var secondPoint = httpRequest.response;
+        var degrees = calculateDirection(firstPoint, secondPoint);
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
     }, 1000);
-    */
+    
 
     //========================================================================================
     // Models
     //========================================================================================
+    
+    // Updates database starting point coordinates
+    function calibrateLocation(position) {
+        if (position.coords.heading !== null) {
+            $('#compass').rotate(position.coords.heading);
+        }
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onload = function () {};
+        httpRequest.open('GET', apiRequest);
+        httpRequest.send();
+    }
 
     // Updates database starting point coordinates
     function updateStartLocation(position) {
@@ -38,10 +51,10 @@
     }
 
     // Gets starting location coordinates
-    function setStartLocation() {
+    function setStartLocation(callbackFunction) {
         var x = document.getElementById("body");
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(updateStartLocation);
+            navigator.geolocation.getCurrentPosition(callbackFunction);
         } else {
             x.innerHTML = "Geolocation is not supported by this browser.";
         }
@@ -79,7 +92,8 @@
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
             var endPoint = httpRequest.response;
-            calculateDirection(startPoint, endPoint);
+            var degrees = calculateDirection(startPoint, endPoint);
+            showCompass(degrees);
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
@@ -131,7 +145,7 @@
         // invert the degrees, so positive degrees grow counter clockwise
         degrees = degrees - (degrees * 2);
         calculateDistance(start, end);
-        showCompass(degrees);
+        return degrees;
     }
 
     function calculateDistance(start, end) {
@@ -226,5 +240,5 @@
     }
 
     initButtons();
-    setStartLocation();
+    setStartLocation(setStartLocation);
 })();
