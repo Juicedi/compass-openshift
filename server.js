@@ -226,7 +226,7 @@ var SampleApp = function () {
         };
         
         self.routes['/calibrateLocation'] = function (req, res) {
-            var username = toString(req.query.name)+ '1';
+            var username = req.query.name + '1';
             // insert a book record into a collection of "books"
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 db.collection('locations').update({
