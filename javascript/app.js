@@ -9,17 +9,17 @@
     var username = 'kayttaja';
     var geolocation = '';
 
-    setInterval(function () {
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/calibrateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
+    /*setInterval(function () {
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getCalibrationLocation';
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
-        var firstPoint = getStartingCoordinates();
+        var firstPoint = getStartingCoordinates(calibrateLocation);
         var secondPoint = httpRequest.response;
         var degrees = calculateDirection(firstPoint, secondPoint);
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
-    }, 1000);
+    }, 1000);*/
     
 
     //========================================================================================
@@ -52,6 +52,7 @@
 
     // Gets starting location coordinates
     function setStartLocation(callbackFunction) {
+        console.log(callbackFunction);
         var x = document.getElementById("body");
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(callbackFunction);
