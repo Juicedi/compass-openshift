@@ -43,6 +43,7 @@
         if (position.coords.heading !== null) {
             $('#compass').rotate(position.coords.heading);
         }
+        console.log(position);
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude;
         var httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {};
