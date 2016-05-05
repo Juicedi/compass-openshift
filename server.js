@@ -227,9 +227,9 @@ var SampleApp = function () {
         self.routes['/calibrateLocation'] = function (req, res) {
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 db.collection('locations').update({
-                    user: req.query.name
+                    user: req.query.name+'1'
                 }, {
-                    user: req.query.name,
+                    user: req.query.name+'1',
                     lat: req.query.lat,
                     lng: req.query.lng
                 }, {
