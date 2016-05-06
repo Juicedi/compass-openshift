@@ -1,4 +1,4 @@
-#!/bin/env node
+//#!/bin/env node
  //  OpenShift sample Node application
 var express = require('express');
 var fs = require('fs');
@@ -11,9 +11,11 @@ var cors = require('cors');
  *  Define the sample application.
  */
 var SampleApp = function () {
-
+    'use strict';
+    
     //  Scope.
-    var self = this;
+    var self = this,
+        connection_string = '127.0.0.1:27017/nodejs';
 
 
     /*  ================================================================  */
@@ -87,8 +89,8 @@ var SampleApp = function () {
 
         // Removed 'SIGPIPE' from the list - bugz 852598.
         ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT',
-         'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'
-        ].forEach(function (element, index, array) {
+            'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'
+            ].forEach(function (element, index, array) {
             process.on(element, function () {
                 self.terminator(element);
             });
@@ -98,8 +100,6 @@ var SampleApp = function () {
 
 
     // Connect to the db
-    var connection_string = '127.0.0.1:27017/nodejs';
-
     if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
         connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
             process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
@@ -134,7 +134,7 @@ var SampleApp = function () {
         self.routes['/getLocations'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                if (err) throw err;
+                if (err) { throw err; }
                 var collection = db.collection('locations').find().limit(100).toArray(function (err, docs) {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
@@ -144,12 +144,14 @@ var SampleApp = function () {
                 });
             });
         };
-        
+
         self.routes['/getUserLocation'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                if (err) throw err;
-                var collection = db.collection('locations').find({user: 'kayttaja'}).limit(10).toArray(function (err, docs) {
+                if (err) { throw err; }
+                var collection = db.collection('locations').find({
+                    user: 'kayttaja'
+                }).limit(10).toArray(function (err, docs) {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
                     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -158,12 +160,14 @@ var SampleApp = function () {
                 });
             });
         };
-        
+
         self.routes['/getCalibrationLocation'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
-                var collection = db.collection('locations').find({user: 'kayttaja1'}).limit(10).toArray(function (err, docs) {
+                var collection = db.collection('locations').find({
+                    user: 'kayttaja1'
+                }).limit(10).toArray(function (err, docs) {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
                     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -172,12 +176,14 @@ var SampleApp = function () {
                 });
             });
         };
-        
+
         self.routes['/getEndLocation'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) throw err;
-                var collection = db.collection('locations').find({user: 'end'}).limit(10).toArray(function (err, docs) {
+                var collection = db.collection('locations').find({
+                    user: 'end'
+                }).limit(10).toArray(function (err, docs) {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
                     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -186,7 +192,7 @@ var SampleApp = function () {
                 });
             });
         };
-        
+
         self.routes['/setEndLocation'] = function (req, res) {
             // insert a book record into a collection of "books"
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
@@ -199,11 +205,12 @@ var SampleApp = function () {
                 }, {
                     upsert: true
                 });
+                db.close();
             });
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             res.send();
-            db.close();
+
         };
 
         self.routes['/updateLocation'] = function (req, res) {
@@ -217,29 +224,29 @@ var SampleApp = function () {
                 }, {
                     upsert: true
                 });
+                db.close();
             });
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             res.send();
-            db.close();
         };
-        
+
         self.routes['/calibrateLocation'] = function (req, res) {
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 db.collection('locations').update({
-                    user: req.query.name+'1'
+                    user: req.query.name + '1'
                 }, {
-                    user: req.query.name+'1',
+                    user: req.query.name + '1',
                     lat: req.query.lat,
                     lng: req.query.lng
                 }, {
                     upsert: true
                 });
+                db.close();
             });
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-            res.send('the hec');
-            db.close();
+            res.send();
         };
 
         self.routes['/'] = function (req, res) {
