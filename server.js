@@ -164,7 +164,7 @@ var SampleApp = function () {
         self.routes['/getCalibrationLocation'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                if (err) throw err;
+                if (err) { throw err; }
                 var collection = db.collection('locations').find({
                     user: 'kayttaja1'
                 }).limit(10).toArray(function (err, docs) {
@@ -180,7 +180,7 @@ var SampleApp = function () {
         self.routes['/getEndLocation'] = function (req, res) {
             // the client db connection scope is wrapped in a callback:
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
-                if (err) throw err;
+                if (err) { throw err; }
                 var collection = db.collection('locations').find({
                     user: 'end'
                 }).limit(10).toArray(function (err, docs) {
@@ -265,7 +265,8 @@ var SampleApp = function () {
         self.app = express.createServer();
 
         //  Add handlers for the app (from the routes).
-        for (var r in self.routes) {
+        var r;
+        for (r in self.routes) {
             self.app.get(r, self.routes[r]);
         }
     };

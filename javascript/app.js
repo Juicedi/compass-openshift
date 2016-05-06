@@ -1,16 +1,18 @@
 /*jslint browser: true*/
 /*global $, jQuery, alert, console*/
+
 /* reittiä varten
  * https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&origin=60.2182261,24.81152&destination=60.1711124,24.9417507&mode=walking
  * http://nodejs-jussilat.rhcloud.com/updateLocation?name=kayttaja&lat=61&lng=25 
  * https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=helsinki
  */
+
 (function () {
     'use strict';
 
     var username = 'kayttaja',
         destination = '',
-        rota = 0;
+        rotation = 0;
 
     function showCompass(degrees) {
         $('#arrow').rotate(degrees);
@@ -39,28 +41,26 @@
         }
 
         var lat1 = parseFloat(start.lat),
-            lon1 = parseFloat(start.lng),
+            lng1 = parseFloat(start.lng),
             lat2 = parseFloat(end.lat),
-            lon2 = parseFloat(end.lng),
+            lng2 = parseFloat(end.lng),
 
             R = 6371, // km 
             x1 = lat2 - lat1,
             dLat = x1.toRad(),
-            x2 = lon2 - lon1,
+            x2 = lng2 - lng1,
             dLon = x2.toRad(),
             a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
             c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
-            d = R * c;
+            distance = R * c;
 
-        return d;
+        return distance;
     }
 
-    //When the request is ready,
-    //this will handle the data and show in what direction is the end point
+    // Calculates direction using two coordinates
     function calculateDirection(start, end) {
         start = JSON.parse(start)[0];
         end = JSON.parse(end)[0];
-        console.log(start, end);
         var latDifference = end.lat - start.lat,
             lngDifference = end.lng - start.lng,
             division = latDifference / lngDifference,
@@ -78,7 +78,7 @@
         return degrees;
     }
 
-    // orientate compass depending on the users movements
+    // Orientate compass depending on the users movements
     function init() {
         var compass = document.getElementById('compass');
         if (window.DeviceOrientationEvent) {
@@ -114,23 +114,10 @@
     //========================================================================================
 
     // Updates database starting point coordinates
-    function calibrateLocation(position) {
-        if (position.coords.heading !== null) {
-            $('#compass').rotate(position.coords.heading);
-        }
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {};
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Updates database starting point coordinates
     function updateStartLocation(position) {
         if (position.coords.heading !== null) {
             $('#compass').rotate(position.coords.heading);
         }
-        console.log(position);
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
             httpRequest = new XMLHttpRequest();
         httpRequest.open('GET', apiRequest);
@@ -139,7 +126,6 @@
 
     // Gets starting location coordinates
     function setStartLocation(callbackFunction) {
-        console.log(callbackFunction);
         var x = document.getElementById("body");
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(callbackFunction);
@@ -215,7 +201,19 @@
         httpRequest.send();
     }
     
-    setInterval(function () {
+    // Updates database starting point coordinates
+    function calibrateLocation(position) {
+        if (position.coords.heading !== null) {
+            $('#compass').rotate(position.coords.heading);
+        }
+        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
+            httpRequest = new XMLHttpRequest();
+        httpRequest.onload = function () {};
+        httpRequest.open('GET', apiRequest);
+        httpRequest.send();
+    }
+    
+    function calibrateCompass() {
         var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getCalibrationLocation',
             httpRequest = new XMLHttpRequest();
         httpRequest.onload = function () {
@@ -225,18 +223,19 @@
         };
         httpRequest.open('GET', apiRequest);
         httpRequest.send();
-    }, 1000);
+    }
 
-    // Initializes buttons
+    // Initializes buttons that allows user to search different locations
     function initButtons() {
         $('#search').on('click', function () {
             $('.hidden').removeClass('hidden');
             destination = $('#destination').val();
             getEndLocation();
         });
-        $('#rotate').on('click', function () {
-            rota += 5;
-            $('#compass').rotate(rota);
+        $('#calibrateCompass').on('click', function () {
+            $('.hidden').removeClass('hidden');
+            destination = $('#destination').val();
+            getEndLocation();
         });
     }
 
