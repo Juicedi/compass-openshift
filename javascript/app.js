@@ -8,237 +8,266 @@
  */
 
 (function () {
-    'use strict';
+  'use strict';
 
-    var username = 'kayttaja',
-        destination = '',
-        rotation = 0;
+  /* GLOBAL VARIABLES */
+  var username = 'kayttaja',
+    destination = '',
+    fetched = 0,
+    calibrationPoints = {};
 
-    function showCompass(degrees) {
-        $('#arrow').rotate(degrees);
+  function rotateCompass(degrees) {
+    $('#arrow').rotate(degrees);
+  }
+
+  function showDistance(distance) {
+    if (distance < 1) {
+      distance = distance * 1000;
+      $('#distance').html((Math.round(distance * 100) / 100) + 'm');
+    } else {
+      $('#distance').html((Math.round(distance * 100) / 100) + 'km');
+    }
+  }
+
+  /**
+   *========================================================================================
+   * Controllers
+   *========================================================================================
+   */
+
+  // The haversine formula calculates the distance between two coordinates 
+  function calculateDistance(start, end) {
+    // Converts numeric degrees to radians
+    if (typeof (Number.prototype.toRad) === "undefined") {
+      Number.prototype.toRad = function () {
+        return this * Math.PI / 180;
+      };
     }
 
-    function showDistance(distance) {
-        if (distance < 1) {
-            distance = distance * 1000;
-            $('#distance').html((Math.round(distance * 100) / 100) + 'm');
+    var lat1 = parseFloat(start.lat),
+      lng1 = parseFloat(start.lng),
+      lat2 = parseFloat(end.lat),
+      lng2 = parseFloat(end.lng),
+
+      // R is in km 
+      R = 6371,
+      x1 = lat2 - lat1,
+      dLat = x1.toRad(),
+      x2 = lng2 - lng1,
+      dLon = x2.toRad(),
+      a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
+      c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+      distance = R * c;
+    return distance;
+  }
+
+  // Calculates direction using two coordinates
+  function calculateDirection(start, end) {
+    start = JSON.parse(start)[0];
+    end = JSON.parse(end)[0];
+    var latDifference = end.lat - start.lat,
+      lngDifference = end.lng - start.lng,
+      division = latDifference / lngDifference,
+      rad2deg = 180 / Math.PI,
+      degrees = Math.atan(division) * rad2deg,
+      distance = calculateDistance(start, end);
+
+    if (parseFloat(end.lng) < parseFloat(start.lng)) {
+      degrees = degrees + 180;
+    }
+
+    /**
+     * Invert the degrees, so positive degrees grow counter clockwise
+     * It is this way because I thought the algorithm like that, and how the compass should rotate
+     */
+    degrees = degrees - (degrees * 2);
+
+    showDistance(distance);
+    return degrees;
+  }
+
+  // Orientate compass depending on the users movements
+  function init() {
+    var compass = document.getElementById('compass');
+    if (window.DeviceOrientationEvent) {
+
+      window.addEventListener('deviceorientation', function (event) {
+        var alpha,
+          webkitAlpha = event.alpha;
+        //Check for iOS property
+        if (event.webkitCompassHeading) {
+          alpha = event.webkitCompassHeading;
+          //Rotation is reversed for iOS
         } else {
-            $('#distance').html((Math.round(distance * 100) / 100) + 'km');
+          //non iOS
+          if (!window.chrome) {
+            //Assume Android stock (this is crude, but good enough for our example) and apply offset
+            webkitAlpha = alpha - 270;
+          }
         }
+        compass.style.Transform = 'rotate(' + alpha + 'deg)';
+        compass.style.WebkitTransform = 'rotate(' + webkitAlpha + 'deg)';
+        //Rotation is reversed for FF
+        compass.style.MozTransform = 'rotate(-' + alpha + 'deg)';
+      }, false);
     }
+  }
+  init();
 
-    //========================================================================================
-    // Controllers
-    //========================================================================================
+  /**
+   *========================================================================================
+   * Models
+   *========================================================================================
+   */
 
-    // The haversine formula calculates the distance between two coordinates 
-    function calculateDistance(start, end) {
-        // Converts numeric degrees to radians
-        if (typeof (Number.prototype.toRad) === "undefined") {
-            Number.prototype.toRad = function () {
-                return this * Math.PI / 180;
-            };
-        }
-
-        var lat1 = parseFloat(start.lat),
-            lng1 = parseFloat(start.lng),
-            lat2 = parseFloat(end.lat),
-            lng2 = parseFloat(end.lng),
-
-            R = 6371, // km 
-            x1 = lat2 - lat1,
-            dLat = x1.toRad(),
-            x2 = lng2 - lng1,
-            dLon = x2.toRad(),
-            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
-            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
-            distance = R * c;
-
-        return distance;
+  // Updates database starting point coordinates
+  function updateStartLocation(position) {
+    if (position.coords.heading !== null) {
+      $('#compass').rotate(position.coords.heading);
     }
+    var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
+      httpRequest = new XMLHttpRequest();
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
 
-    // Calculates direction using two coordinates
-    function calculateDirection(start, end) {
-        start = JSON.parse(start)[0];
-        end = JSON.parse(end)[0];
-        var latDifference = end.lat - start.lat,
-            lngDifference = end.lng - start.lng,
-            division = latDifference / lngDifference,
-            rad2deg = 180 / Math.PI,
-            degrees = Math.atan(division) * rad2deg,
-            distance = calculateDistance(start, end);
-
-        if (parseFloat(end.lng) < parseFloat(start.lng)) {
-            degrees = degrees + 180;
-        }
-
-        // invert the degrees, so positive degrees grow counter clockwise
-        degrees = degrees - (degrees * 2);
-        showDistance(distance);
-        return degrees;
+  // Gets starting location coordinates from the browser.
+  // Location is later send to database for possible new features.(two people tracking each others locations)
+  function setStartLocation(callbackFunction) {
+    var x = document.getElementById("body");
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(callbackFunction);
+    } else {
+      x.innerHTML = "Geolocation is not supported by this browser.";
     }
+  }
 
-    // Orientate compass depending on the users movements
-    function init() {
-        var compass = document.getElementById('compass');
-        if (window.DeviceOrientationEvent) {
+  // Requests ending point from database and tries to get direction from starting point to ending point
+  function getDbEndPoint(startPoint) {
+    var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getEndLocation',
+      httpRequest = new XMLHttpRequest();
+    httpRequest.onload = function () {
+      var endPoint = httpRequest.response,
+        degrees;
+      degrees = calculateDirection(startPoint, endPoint);
+      rotateCompass(degrees);
+    };
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
 
-            window.addEventListener('deviceorientation', function (event) {
-                var alpha,
-                    webkitAlpha = event.alpha;
-                //Check for iOS property
-                if (event.webkitCompassHeading) {
-                    alpha = event.webkitCompassHeading;
-                    //Rotation is reversed for iOS
-                    $('#compass').rotate(alpha);
-                } else {
-                    //non iOS
-                    if (!window.chrome) {
-                        //Assume Android stock (this is crude, but good enough for our example) and apply offset
-                        webkitAlpha = alpha - 270;
-                    }
-                }
+  // Get starting-point/origin from database
+  function getCoordinates() {
+    var startingCoordinates = {},
+      apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation',
+      httpRequest = new XMLHttpRequest();
+    httpRequest.onload = function () {
+      startingCoordinates = httpRequest.response;
+      getDbEndPoint(startingCoordinates);
+    };
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
 
-                compass.style.Transform = 'rotate(' + alpha + 'deg)';
-                compass.style.WebkitTransform = 'rotate(' + webkitAlpha + 'deg)';
-                //Rotation is reversed for FF
-                compass.style.MozTransform = 'rotate(-' + alpha + 'deg)';
-            }, false);
-        }
+  // Sets destination coordinates to database in separate request, because otherwise it response would be null
+  function setEndLocationToDb(response) {
+    var locationName = response.address_components[0].long_name,
+      apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.geometry.location.lat + '&lng=' + response.geometry.location.lng,
+      httpRequest = new XMLHttpRequest();
+    response = response.geometry.location;
+    httpRequest.onload = function () {
+      $('#message').html('Your destination is ' + locationName);
+      getCoordinates();
+    };
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
+
+  // Gets location coordinates by httpRequest from google geoCode API
+  // Used to determine in what direction the user's destination is.
+  function getEndLocation() {
+    var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=' + destination,
+      httpRequest = new XMLHttpRequest();
+    httpRequest.onload = function () {
+      var response = JSON.parse(httpRequest.response);
+      setEndLocationToDb(response.results[0]);
+    };
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
+
+  /**
+   * Users Starting coordinates used in calibration,
+   * when comparing starting point and calibration point which is 10s away from starting point
+   */
+  function getStartingCoordinates() {
+    var startingCoordinates = {},
+      apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation',
+      httpRequest = new XMLHttpRequest();
+    httpRequest.onload = function () {
+      startingCoordinates = httpRequest.response;
+      calibrationPoints.firstPoint = startingCoordinates;
+      fetched += 1;
+      calibrate();
+    };
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
+
+  // Sets user's newer coordinates into the database. Used in calibration.
+  function calibrateLocation(position) {
+    var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '1' + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
+      httpRequest = new XMLHttpRequest();
+    httpRequest.onload = function () {};
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
+
+  /**
+   * Newest location is used to calibrate the compass so the north arrow will be pointing north.
+   * Newest location will be compared with original starting point to determine users direction
+   */
+  function getNewestLocation() {
+    var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getCalibrationLocation',
+      httpRequest = new XMLHttpRequest();
+    httpRequest.onload = function () {
+      var secondPoint = httpRequest.response;
+      calibrationPoints.secondPoint = secondPoint;
+      fetched += 1;
+      calibrate();
+    };
+    httpRequest.open('GET', apiRequest);
+    httpRequest.send();
+  }
+
+  function calibrate() {
+    var degrees;
+    if (fetched === 2) {
+      degrees = calculateDirection(calibrationPoints.firstPoint, calibrationPoints.secondPoint);
+    } else if (fetched === 1) {
+      getNewestLocation();
+    } else {
+      getStartingCoordinates();
     }
-    init();
+  }
 
+  /**
+   * Initializes buttons that allows user to search different locations 
+   * and calibrate the compass to point north.
+   */
+  function initButtons() {
+    $('#search').on('click', function () {
+      $('.hidden').removeClass('hidden');
+      destination = $('#destination').val();
+      getEndLocation();
+    });
+    $('#calibrateCompass').on('click', function () {
+      $('.hidden').removeClass('hidden');
+      destination = $('#destination').val();
+      getEndLocation();
+    });
+  }
 
-    //========================================================================================
-    // Models
-    //========================================================================================
-
-    // Updates database starting point coordinates
-    function updateStartLocation(position) {
-        if (position.coords.heading !== null) {
-            $('#compass').rotate(position.coords.heading);
-        }
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
-            httpRequest = new XMLHttpRequest();
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Gets starting location coordinates
-    function setStartLocation(callbackFunction) {
-        var x = document.getElementById("body");
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(callbackFunction);
-        } else {
-            x.innerHTML = "Geolocation is not supported by this browser.";
-        }
-    }
-
-    // Requests ending point from database and tries to get direction from starting point to ending point
-    function getDbEndPoint(startPoint) {
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getEndLocation',
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {
-            var endPoint = httpRequest.response,
-                degrees;
-            degrees = calculateDirection(startPoint, endPoint);
-            showCompass(degrees);
-        };
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Requests starting point from database
-    function getCoordinates() {
-        var startingCoordinates = {},
-            apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation',
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {
-            startingCoordinates = httpRequest.response;
-            getDbEndPoint(startingCoordinates);
-        };
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Sets end location to database in separate request, because otherwise it response would be null
-    function setEndLocationToDb(response) {
-        var locationName = response.address_components[0].long_name,
-            apiRequest = 'https://nodejs-jussilat.rhcloud.com/setEndLocation?name=end&lat=' + response.geometry.location.lat + '&lng=' + response.geometry.location.lng,
-            httpRequest = new XMLHttpRequest();
-        response = response.geometry.location;
-        httpRequest.onload = function () {
-            $('#message').html('Your destination is ' + locationName);
-            getCoordinates();
-        };
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Gets location coordinates by httpRequest from google geoCode API
-    function getEndLocation() {
-        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDUTG34LGXSXBAY-trPXT6z3F_g1h05iYk&address=' + destination,
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {
-            var response = JSON.parse(httpRequest.response);
-            setEndLocationToDb(response.results[0]);
-        };
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Users Starting coordinates used in calibration,
-    // when comparing starting point and calibration point which is 10s away from starting point
-    function getStartingCoordinates() {
-        var startingCoordinates = {},
-            apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation',
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {
-            startingCoordinates = httpRequest.response;
-            return startingCoordinates;
-        };
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-    
-    // Updates database starting point coordinates
-    function calibrateLocation(position) {
-        if (position.coords.heading !== null) {
-            $('#compass').rotate(position.coords.heading);
-        }
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {};
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-    
-    function calibrateCompass() {
-        var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getCalibrationLocation',
-            httpRequest = new XMLHttpRequest();
-        httpRequest.onload = function () {
-            var firstPoint = getStartingCoordinates(),
-                secondPoint = httpRequest.response,
-                degrees = calculateDirection(firstPoint, secondPoint);
-        };
-        httpRequest.open('GET', apiRequest);
-        httpRequest.send();
-    }
-
-    // Initializes buttons that allows user to search different locations
-    function initButtons() {
-        $('#search').on('click', function () {
-            $('.hidden').removeClass('hidden');
-            destination = $('#destination').val();
-            getEndLocation();
-        });
-        $('#calibrateCompass').on('click', function () {
-            $('.hidden').removeClass('hidden');
-            destination = $('#destination').val();
-            getEndLocation();
-        });
-    }
-
-    initButtons();
-    setStartLocation(updateStartLocation);
+  initButtons();
+  setStartLocation(updateStartLocation);
 }());
