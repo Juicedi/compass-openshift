@@ -16,7 +16,7 @@ var SampleApp = function () {
     var self = this,
         connection_string = '127.0.0.1:27017/nodejs';
     
-    self.app.use(express.static(__dirname));
+    self.use(express.static(__dirname));
 
 
     /*  ================================================================  */
