@@ -18,5 +18,6 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-### Install
+### Install to Openshift server
+Openshift needs NodeJS and mongoDB cartridges.
 http://blog.anthavio.net/2014/01/deploy-to-openshift-from-github.html
