@@ -6,7 +6,6 @@ var fs = require('fs');
 var MongoClient = require('mongodb').MongoClient;
 var cors = require('cors');
 
-
 /**
  *  Define the sample application.
  */
@@ -16,6 +15,8 @@ var SampleApp = function () {
     //  Scope.
     var self = this,
         connection_string = '127.0.0.1:27017/nodejs';
+    
+    self.app.use(express.static(__dirname));
 
 
     /*  ================================================================  */
