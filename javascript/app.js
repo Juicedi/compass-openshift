@@ -13,7 +13,6 @@
   /* GLOBAL VARIABLES */
   var username = 'kayttaja',
     destination = '',
-    requestsDone = 0,
     calibrationPoints = {};
 
   function rotateArrow(degrees) {
@@ -127,7 +126,7 @@
 
   // Updates database starting point coordinates
   function updateStartLocation(position) {
-    $('#startingpoint').html(position.coords.latitude +' '+ position.coords.longitude);
+    $('#startingpoint').html(position.coords.latitude + ' ' + position.coords.longitude);
     if (position.coords.heading !== null) {
       $('#compass').rotate(position.coords.heading);
     }
@@ -136,7 +135,7 @@
     httpRequest.open('GET', apiRequest);
     httpRequest.send();
   }
-
+/*
   function errorCallback_highAccuracy(position) {
     if (error.code === error.TIMEOUT) {
       // Attempt to get GPS loc timed out after 5 seconds, 
@@ -166,17 +165,13 @@
 
     $('body').append(msg);
   }
-
+*/
   // Gets starting location coordinates from the browser.
   // Location is later send to database for possible new features.(two people tracking each others locations)
   function setStartLocation(callbackFunction) {
     var x = document.getElementById("body");
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(callbackFunction, errorCallback_highAccuracy, {
-        maximumAge: 600000,
-        timeout: 10000,
-        enableHighAccuracy: true
-      });
+      navigator.geolocation.getCurrentPosition(callbackFunction);
     } else {
       x.innerHTML = "Geolocation is not supported by this browser.";
     }
@@ -249,7 +244,6 @@
     httpRequest.onload = function () {
       startingCoordinates = httpRequest.response;
       calibrationPoints.firstPoint = JSON.parse(startingCoordinates)[0];
-      requestsDone += 1;
       console.log('done 2');
       callback();
     };
@@ -259,11 +253,10 @@
 
   // Sets user's newer coordinates into the database. Used in calibration.
   function calibrateLocation(position, callback) {
-    console.log(position);
-    var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '1' + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
+    var lati = parseFloat(position.coords.latitude) + 0.003;
+    var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '1' + '&lat=' + lati + '&lng=' + position.coords.longitude,
       httpRequest = new XMLHttpRequest();
     httpRequest.onload = function () {
-      requestsDone += 1;
       console.log('done 1');
       callback();
     };
@@ -281,8 +274,7 @@
     httpRequest.onload = function () {
       var secondPoint = httpRequest.response;
       calibrationPoints.secondPoint = JSON.parse(secondPoint)[0];
-      $('#endpoint').html(calibrationPoints.secondPoint.lat +' '+ calibrationPoints.secondPoint.lng );
-      requestsDone += 1;
+      $('#endpoint').html(calibrationPoints.secondPoint.lat + ' ' + calibrationPoints.secondPoint.lng);
       console.log('done 3');
       callback();
     };
@@ -300,6 +292,7 @@
         calibrateLocation(position, function () {
           getStartingCoordinates(function () {
             getNewestLocation(function () {
+              console.log(calibrationPoints.firstPoint, calibrationPoints.secondPoint);
               degrees = calculateDirection(calibrationPoints.firstPoint, calibrationPoints.secondPoint);
               degrees = degrees + 90;
               rotateCompass(degrees);
