@@ -15,8 +15,6 @@ var SampleApp = function () {
     //  Scope.
     var self = this,
         connection_string = '127.0.0.1:27017/nodejs';
-    
-    self.use(express.static(__dirname));
 
 
     /*  ================================================================  */
