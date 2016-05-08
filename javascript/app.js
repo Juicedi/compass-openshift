@@ -13,11 +13,15 @@
   /* GLOBAL VARIABLES */
   var username = 'kayttaja',
     destination = '',
-    fetched = 0,
+    requestsDone = 0,
     calibrationPoints = {};
 
-  function rotateCompass(degrees) {
+  function rotateArrow(degrees) {
     $('#arrow').rotate(degrees);
+  }
+
+  function rotateCompass(degrees) {
+    $('#compass').rotate(degrees);
   }
 
   function showDistance(distance) {
@@ -63,14 +67,15 @@
 
   // Calculates direction using two coordinates
   function calculateDirection(start, end) {
-    start = JSON.parse(start)[0];
-    end = JSON.parse(end)[0];
-    var latDifference = end.lat - start.lat,
-      lngDifference = end.lng - start.lng,
+    var latDifference = parseFloat(end.lat) - parseFloat(start.lat),
+      lngDifference = parseFloat(end.lng) - parseFloat(start.lng),
       division = latDifference / lngDifference,
       rad2deg = 180 / Math.PI,
       degrees = Math.atan(division) * rad2deg,
       distance = calculateDistance(start, end);
+
+
+    console.log(latDifference);
 
     if (parseFloat(end.lng) < parseFloat(start.lng)) {
       degrees = degrees + 180;
@@ -83,6 +88,7 @@
     degrees = degrees - (degrees * 2);
 
     showDistance(distance);
+    console.log(latDifference);
     return degrees;
   }
 
@@ -112,7 +118,6 @@
       }, false);
     }
   }
-  init();
 
   /**
    *========================================================================================
@@ -122,6 +127,7 @@
 
   // Updates database starting point coordinates
   function updateStartLocation(position) {
+    $('#startingpoint').html(position.coords.latitude +' '+ position.coords.longitude);
     if (position.coords.heading !== null) {
       $('#compass').rotate(position.coords.heading);
     }
@@ -131,12 +137,46 @@
     httpRequest.send();
   }
 
+  function errorCallback_highAccuracy(position) {
+    if (error.code === error.TIMEOUT) {
+      // Attempt to get GPS loc timed out after 5 seconds, 
+      // try low accuracy location
+      $('body').append("attempting to get low accuracy location");
+      navigator.geolocation.getCurrentPosition(
+        successCallback,
+        errorCallback_lowAccuracy, {
+          maximumAge: 600000,
+          timeout: 10000,
+          enableHighAccuracy: false
+        });
+      return;
+    }
+  }
+
+  function errorCallback_lowAccuracy(position) {
+    var msg = "<p>Can't get your location (low accuracy attempt). Error = ";
+    if (error.code === 1) {
+      msg += "PERMISSION_DENIED";
+    } else if (error.code === 2) {
+      msg += "POSITION_UNAVAILABLE";
+    } else if (error.code === 3) {
+      msg += "TIMEOUT";
+    }
+    msg += ", msg = " + error.message;
+
+    $('body').append(msg);
+  }
+
   // Gets starting location coordinates from the browser.
   // Location is later send to database for possible new features.(two people tracking each others locations)
   function setStartLocation(callbackFunction) {
     var x = document.getElementById("body");
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(callbackFunction);
+      navigator.geolocation.getCurrentPosition(callbackFunction, errorCallback_highAccuracy, {
+        maximumAge: 600000,
+        timeout: 10000,
+        enableHighAccuracy: true
+      });
     } else {
       x.innerHTML = "Geolocation is not supported by this browser.";
     }
@@ -149,8 +189,10 @@
     httpRequest.onload = function () {
       var endPoint = httpRequest.response,
         degrees;
+      startPoint = JSON.parse(startPoint)[0];
+      endPoint = JSON.parse(endPoint)[0];
       degrees = calculateDirection(startPoint, endPoint);
-      rotateCompass(degrees);
+      rotateArrow(degrees);
     };
     httpRequest.open('GET', apiRequest);
     httpRequest.send();
@@ -200,25 +242,31 @@
    * Users Starting coordinates used in calibration,
    * when comparing starting point and calibration point which is 10s away from starting point
    */
-  function getStartingCoordinates() {
+  function getStartingCoordinates(callback) {
     var startingCoordinates = {},
       apiRequest = 'https://nodejs-jussilat.rhcloud.com/getUserLocation',
       httpRequest = new XMLHttpRequest();
     httpRequest.onload = function () {
       startingCoordinates = httpRequest.response;
-      calibrationPoints.firstPoint = startingCoordinates;
-      fetched += 1;
-      calibrate();
+      calibrationPoints.firstPoint = JSON.parse(startingCoordinates)[0];
+      requestsDone += 1;
+      console.log('done 2');
+      callback();
     };
     httpRequest.open('GET', apiRequest);
     httpRequest.send();
   }
 
   // Sets user's newer coordinates into the database. Used in calibration.
-  function calibrateLocation(position) {
+  function calibrateLocation(position, callback) {
+    console.log(position);
     var apiRequest = 'https://nodejs-jussilat.rhcloud.com/updateLocation?name=' + username + '1' + '&lat=' + position.coords.latitude + '&lng=' + position.coords.longitude,
       httpRequest = new XMLHttpRequest();
-    httpRequest.onload = function () {};
+    httpRequest.onload = function () {
+      requestsDone += 1;
+      console.log('done 1');
+      callback();
+    };
     httpRequest.open('GET', apiRequest);
     httpRequest.send();
   }
@@ -227,28 +275,42 @@
    * Newest location is used to calibrate the compass so the north arrow will be pointing north.
    * Newest location will be compared with original starting point to determine users direction
    */
-  function getNewestLocation() {
+  function getNewestLocation(callback) {
     var apiRequest = 'https://nodejs-jussilat.rhcloud.com/getCalibrationLocation',
       httpRequest = new XMLHttpRequest();
     httpRequest.onload = function () {
       var secondPoint = httpRequest.response;
-      calibrationPoints.secondPoint = secondPoint;
-      fetched += 1;
-      calibrate();
+      calibrationPoints.secondPoint = JSON.parse(secondPoint)[0];
+      $('#endpoint').html(calibrationPoints.secondPoint.lat +' '+ calibrationPoints.secondPoint.lng );
+      requestsDone += 1;
+      console.log('done 3');
+      callback();
     };
     httpRequest.open('GET', apiRequest);
     httpRequest.send();
   }
 
+  // Callbacks 
   function calibrate() {
     var degrees;
-    if (fetched === 2) {
-      degrees = calculateDirection(calibrationPoints.firstPoint, calibrationPoints.secondPoint);
-    } else if (fetched === 1) {
-      getNewestLocation();
-    } else {
-      getStartingCoordinates();
-    }
+
+    console.log('starting');
+    setTimeout(function () {
+      setStartLocation(function (position) {
+        calibrateLocation(position, function () {
+          getStartingCoordinates(function () {
+            getNewestLocation(function () {
+              degrees = calculateDirection(calibrationPoints.firstPoint, calibrationPoints.secondPoint);
+              degrees = degrees + 90;
+              rotateCompass(degrees);
+              console.log(degrees);
+              init();
+            });
+          });
+        });
+      });
+    }, 150);
+
   }
 
   /**
@@ -262,9 +324,7 @@
       getEndLocation();
     });
     $('#calibrateCompass').on('click', function () {
-      $('.hidden').removeClass('hidden');
-      destination = $('#destination').val();
-      getEndLocation();
+      calibrate();
     });
   }
 

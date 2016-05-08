@@ -150,7 +150,7 @@ var SampleApp = function () {
             MongoClient.connect('mongodb://' + connection_string, function (err, db) {
                 if (err) { throw err; }
                 var collection = db.collection('locations').find({
-                    user: 'kayttaja'
+                    user: 'kayttaja1'
                 }).limit(10).toArray(function (err, docs) {
                     console.dir(docs);
                     res.header("Access-Control-Allow-Origin", "*");
